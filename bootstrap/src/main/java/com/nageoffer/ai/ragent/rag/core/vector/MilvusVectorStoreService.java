@@ -34,6 +34,7 @@ import io.milvus.v2.service.vector.response.InsertResp;
 import io.milvus.v2.service.vector.response.UpsertResp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -47,6 +48,9 @@ public class MilvusVectorStoreService implements VectorStoreService {
     private final MilvusClientV2 milvusClient;
     private final KnowledgeBaseMapper kbMapper;
 
+    @Value("${rag.default.dimension:1024}")
+    private int vectorDimension;
+
     @Override
     public void indexDocumentChunks(String kbId, String docId, List<VectorChunk> chunks) {
         Assert.isFalse(chunks == null || chunks.isEmpty(), () -> new ClientException("文档分块不允许为空"));
@@ -54,9 +58,8 @@ public class MilvusVectorStoreService implements VectorStoreService {
         KnowledgeBaseDO kbDO = kbMapper.selectById(kbId);
         Assert.isFalse(kbDO == null, () -> new ClientException("知识库不存在"));
 
-        // 维度校验（你的 schema dim=4096）
-        final int dim = 4096;
-        List<float[]> vectors = extractVectors(chunks, dim);
+        // 维度校验
+        List<float[]> vectors = extractVectors(chunks, vectorDimension);
 
         List<JsonObject> rows = new ArrayList<>(chunks.size());
         for (int i = 0; i < chunks.size(); i++) {
@@ -99,8 +102,7 @@ public class MilvusVectorStoreService implements VectorStoreService {
         Assert.isFalse(kbDO == null, () -> new ClientException("知识库不存在"));
 
         // 维度校验
-        final int dim = 4096;
-        float[] vector = extractVector(chunk, dim);
+        float[] vector = extractVector(chunk, vectorDimension);
 
         String chunkPk = chunk.getChunkId() != null ? chunk.getChunkId() : IdUtil.getSnowflakeNextIdStr();
 
