@@ -30,7 +30,7 @@ spring:
     redis:
       host: 127.0.0.1
       port: 6379
-      password: 123456
+      password: 888888
 
 milvus:
   uri: http://localhost:19530
@@ -38,7 +38,7 @@ milvus:
 rag:
   default:
     collection-name: rag_default_store
-    dimension: 4096
+    dimension: 1024
     metric-type: COSINE
 
   query-rewrite:
@@ -96,15 +96,16 @@ ai:
         embedding: /api/embed
     bailian:
       url: https://dashscope.aliyuncs.com
-      api-key: ${BAILIAN_API_KEY:}
+#      api-key: ${BAILIAN_API_KEY:}
+      api-key: sk-0ca1e5c7632e4e5f9fdca29457bfbe4e
       endpoints:
         chat: /compatible-mode/v1/chat/completions
         rerank: /api/v1/services/rerank/text-rerank/text-rerank
-    siliconflow:
-      url: https://api.siliconflow.cn
-      api-key: ${SILICONFLOW_API_KEY:}
+    bigmodel:
+      url: https://open.bigmodel.cn/api/paas/v4
+      api-key: 143c84742f484f9cbeddede350d86ea9.iuGT22PDtkOvgLC0
       endpoints:
-        chat: /v1/chat/completions
+        chat: /chat/completions
         embedding: /v1/embeddings
 
   selection:
@@ -115,41 +116,41 @@ ai:
     message-chunk-size: 1
 
   chat:
-    default-model: qwen3-max
-    deep-thinking-model: qwen3-max
+    default-model: qwen-flash
+    deep-thinking-model: qwen3.5-plus
     candidates:
-      - id: qwen-plus
+      - id: qwen-flash
         provider: bailian
-        model: qwen-plus-latest
-        priority: 1
-      - id: qwen3-max
-        provider: bailian
-        model: qwen3-max
-        supports-thinking: true
-        priority: 3
-      - id: glm-4.7
-        provider: siliconflow
-        model: Pro/zai-org/GLM-4.7
-        supports-thinking: true
+        model: qwen-flash
         priority: 0
-      - id: qwen3-local
+      - id: qwen3.5-plus
+        provider: bailian
+        model: qwen3.5-plus
+        priority: 3
+      - id: qwen3.5:4b-local
         provider: ollama
-        model: qwen3:8b-fp16
+        model: qwen3.5:4b
+        priority: 1
+      - id: glm-4.7
+        provider: bigmodel
+        model: GLM-4.7
+        supports-thinking: true
         priority: 2
 
   embedding:
-    default-model: qwen-emb-8b
+    default-model: my-bge-m3:latest
     candidates:
-      - id: qwen-emb-8b
-        provider: siliconflow
-        model: Qwen/Qwen3-Embedding-8B
-        dimension: 4096
-        priority: 1
-      - id: qwen-emb-local
+      - id: my-bge-m3:latest
         provider: ollama
-        model: qwen3-embedding:8b-fp16
-        dimension: 4096
-        priority: 2
+        model: my-bge-m3:latest
+        dimension: 1024
+        priority: 1
+#      - id: qwen-emb-8b
+#        provider: siliconflow
+#        model: Qwen/Qwen3-Embedding-8B
+#        dimension: 4096
+#        priority: 2
+
 
   rerank:
     default-model: qwen3-rerank
