@@ -162,9 +162,16 @@ public class VectorGlobalSearchChannel implements SearchChannel {
         // 从知识库表获取全量 collection（全局检索兜底）
         List<KnowledgeBaseDO> kbList = knowledgeBaseMapper.selectList(
                 Wrappers.lambdaQuery(KnowledgeBaseDO.class)
-                        .select(KnowledgeBaseDO::getCollectionName)
+                        .select(KnowledgeBaseDO::getCollectionName, KnowledgeBaseDO::getName)
                         .eq(KnowledgeBaseDO::getDeleted, 0)
         );
+
+        // 【调试日志】数据库查询结果
+        log.info("[调试] 知识库查询结果 - 总数：{}", kbList.size());
+        for (KnowledgeBaseDO kb : kbList) {
+            log.info("[调试] 知识库：name={}, collectionName={}", kb.getName(), kb.getCollectionName());
+        }
+
         for (KnowledgeBaseDO kb : kbList) {
             String collectionName = kb.getCollectionName();
             if (collectionName != null && !collectionName.isBlank()) {

@@ -91,7 +91,26 @@ public class RAGChatServiceImpl implements RAGChatService {
         List<ChatMessage> history = memoryService.loadAndAppend(actualConversationId, userId, ChatMessage.user(question));
 
         RewriteResult rewriteResult = queryRewriteService.rewriteWithSplit(question, history);
+        log.info("[调试] 改写结果 - rewrittenQuestion={}, subQuestions={}",
+                 rewriteResult.rewrittenQuestion(), rewriteResult.subQuestions());
+
         List<SubQuestionIntent> subIntents = intentResolver.resolve(rewriteResult);
+
+        // 【调试日志】意图识别结果
+        log.info("[调试] 意图识别结果 - subIntents 数量={}", subIntents.size());
+        for (SubQuestionIntent si : subIntents) {
+            log.info("[调试] 子问题意图：subQuestion={}, nodeScores 数量={}",
+                     si.subQuestion(), si.nodeScores() != null ? si.nodeScores().size() : 0);
+            if (si.nodeScores() != null) {
+                for (var ns : si.nodeScores()) {
+                    log.info("[调试]   - nodeId={}, nodePath={}, kind={}, score={}",
+                             ns.getNode().getId(),
+                             ns.getNode().getFullPath(),
+                             ns.getNode().getKind(),
+                             ns.getScore());
+                }
+            }
+        }
 
         GuidanceDecision guidanceDecision = guidanceService.detectAmbiguity(rewriteResult.rewrittenQuestion(), subIntents);
         if (guidanceDecision.isPrompt()) {
@@ -109,6 +128,14 @@ public class RAGChatServiceImpl implements RAGChatService {
         }
 
         RetrievalContext ctx = retrievalEngine.retrieve(subIntents, DEFAULT_TOP_K);
+
+        // 【调试日志】检索最终结果
+        log.info("[调试] 检索最终结果 - isEmpty={}, kbContext 长度={}, mcpContext 长度={}, intentChunks={}",
+                 ctx.isEmpty(),
+                 ctx.getKbContext() != null ? ctx.getKbContext().length() : 0,
+                 ctx.getMcpContext() != null ? ctx.getMcpContext().length() : 0,
+                 ctx.getIntentChunks() != null ? ctx.getIntentChunks().size() : 0);
+
         if (ctx.isEmpty()) {
             String emptyReply = "未检索到与问题相关的文档内容。";
             callback.onContent(emptyReply);

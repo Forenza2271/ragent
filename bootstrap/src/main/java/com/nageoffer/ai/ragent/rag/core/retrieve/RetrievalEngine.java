@@ -170,7 +170,7 @@ public class RetrievalEngine {
     }
 
     private List<NodeScore> filterKbIntents(List<NodeScore> nodeScores) {
-        return nodeScores.stream()
+        List<NodeScore> filtered = nodeScores.stream()
                 .filter(ns -> ns.getScore() >= INTENT_MIN_SCORE)
                 .filter(ns -> {
                     IntentNode node = ns.getNode();
@@ -180,6 +180,16 @@ public class RetrievalEngine {
                     return node.getKind() == null || node.getKind() == IntentKind.KB;
                 })
                 .toList();
+
+        // 【调试日志】KB 意图过滤结果
+        log.info("[调试] KB 意图过滤 - 输入：{}, 输出：{}, 阈值：{}",
+                 nodeScores.size(), filtered.size(), INTENT_MIN_SCORE);
+        for (NodeScore ns : filtered) {
+            log.info("[调试] KB 意图：nodeId={}, nodePath={}, score={}",
+                     ns.getNode().getId(), ns.getNode().getFullPath(), ns.getScore());
+        }
+
+        return filtered;
     }
 
     private String executeMcpAndMerge(String question, List<NodeScore> mcpIntents) {
@@ -196,9 +206,16 @@ public class RetrievalEngine {
     }
 
     private KbResult retrieveAndRerank(SubQuestionIntent intent, List<NodeScore> kbIntents, int topK) {
+        // 【调试日志】检索入口
+        log.info("[调试] 开始检索 - subQuestion={}, kbIntents={}, topK={}",
+                 intent.subQuestion(), kbIntents.size(), topK);
+
         // 使用多通道检索引擎（是否启用全局检索由置信度阈值决定）
         List<SubQuestionIntent> subIntents = List.of(intent);
         List<RetrievedChunk> chunks = multiChannelRetrievalEngine.retrieveKnowledgeChannels(subIntents, topK);
+
+        // 【调试日志】检索结果
+        log.info("[调试] 检索完成 - chunks={}, kbIntents={}", chunks.size(), kbIntents.size());
 
         if (CollUtil.isEmpty(chunks)) {
             return KbResult.empty();

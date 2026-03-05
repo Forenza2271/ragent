@@ -26,6 +26,7 @@ import com.nageoffer.ai.ragent.rag.enums.IntentKind;
 import com.nageoffer.ai.ragent.framework.trace.RagTraceNode;
 import com.nageoffer.ai.ragent.rag.core.rewrite.RewriteResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,7 @@ import static com.nageoffer.ai.ragent.rag.enums.IntentKind.SYSTEM;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class IntentResolver {
 
     @Qualifier("defaultIntentClassifier")
@@ -54,6 +56,10 @@ public class IntentResolver {
         List<String> subQuestions = CollUtil.isNotEmpty(rewriteResult.subQuestions())
                 ? rewriteResult.subQuestions()
                 : List.of(rewriteResult.rewrittenQuestion());
+
+        log.info("[调试] 意图解析开始 - rewrittenQuestion={}, subQuestions={}",
+                 rewriteResult.rewrittenQuestion(), subQuestions);
+
         List<CompletableFuture<SubQuestionIntent>> tasks = subQuestions.stream()
                 .map(q -> CompletableFuture.supplyAsync(
                         () -> new SubQuestionIntent(q, classifyIntents(q)),
@@ -63,6 +69,9 @@ public class IntentResolver {
         List<SubQuestionIntent> subIntents = tasks.stream()
                 .map(CompletableFuture::join)
                 .toList();
+
+        log.info("[调试] 意图解析完成 - subIntents 总数={}", subIntents.size());
+
         return capTotalIntents(subIntents);
     }
 
