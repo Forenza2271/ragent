@@ -11,20 +11,9 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 100MB
-
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    type: com.zaxxer.hikari.HikariDataSource
-    username: root
-    password: root
-    url: jdbc:mysql://127.0.0.1:3306/ragent?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-    hikari:
-      connection-timeout: 5000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      maximum-pool-size: 10
-      minimum-idle: 5
-      pool-name: RagentHikariPool
+  
+  profiles:
+    active: pg
 
   data:
     redis:
@@ -147,11 +136,11 @@ ai:
         model: my-bge-m3:latest
         dimension: 1024
         priority: 1
-#      - id: qwen-emb-8b
-#        provider: siliconflow
-#        model: Qwen/Qwen3-Embedding-8B
-#        dimension: 4096
-#        priority: 2
+  #      - id: qwen-emb-8b
+  #        provider: siliconflow
+  #        model: Qwen/Qwen3-Embedding-8B
+  #        dimension: 4096
+  #        priority: 2
 
 
   rerank:
@@ -182,3 +171,42 @@ sa-token:
 
 app:
   demo-mode: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: pg
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    username: postgres
+    password: postgres
+    url: jdbc:postgresql://127.0.0.1:5432/ragent?client_encoding=UTF8
+    hikari:
+      connection-timeout: 5000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      pool-name: RagentHikariPool
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    username: root
+    password: root
+    url: jdbc:mysql://127.0.0.1:3306/ragent?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    hikari:
+      connection-timeout: 5000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      pool-name: RagentHikariPool
+
